@@ -1,0 +1,192 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+```{r}
+library(vegan)
+library(labdsv)
+library(plyr)
+```
+
+```{r}
+library(BIEN)
+#As you know, you can obtain species occurrence data from the BIEN database, or from another even more comprehensive data base called gbif (gbif.org). Occurrence data is a type of abundance data, and it can also be used to figure out presence-absence data. 
+
+bronx <- BIEN_occurrence_county(country="United States", state="New York", county = "Bronx")
+head(bronx)
+tail(bronx)
+manhattan <- BIEN_occurrence_county(country="United States", state="New York", county = "New York")
+head(manhattan)
+tail(manhattan)
+attributes(manhattan)
+westchester <- BIEN_occurrence_county(country="United States", state="New York", county = "Westchester")
+head(westchester)
+tail(westchester)
+attributes(westchester)
+Richmond <- BIEN_occurrence_county(country="United States", state="New York", county = "Richmond")
+Queens <- BIEN_occurrence_county(country="United States", state="New York", county = "Queens")
+Kings <- BIEN_occurrence_county(country="United States", state="New York", county = "Queens")
+Knox <- BIEN_occurrence_county(country="United States", state="Tennessee", county = "Knox")
+Grainger <- BIEN_occurrence_county(country="United States", state="Tennessee", county = "Grainger")
+Sevier <- BIEN_occurrence_county(country="United States", state="Tennessee", county = "Sevier")
+Roane <- BIEN_occurrence_county(country="United States", state="Tennessee", county = "Roane")
+Blount <- BIEN_occurrence_county(country="United States", state="Tennessee", county = "Blount")
+```
+
+CHALLENGE THEM TO DO THEIR COUNTY LISTS
+
+```{r}
+#We previously learned to "slim down" data sets to one or a few variables, which we can do here
+bronx.occ=bronx[c(1)]
+head(bronx.occ)
+manhattan.occ=manhattan[c(1)]
+head(manhattan.occ)
+westchester.occ=westchester[c(1)]
+head(westchester.occ)
+Queens.occ=Queens[c(1)]
+Kings.occ=Kings[c(1)]
+Richmond.occ=Richmond[c(1)]
+Knox.occ=Knox[c(1)]
+Grainger.occ=Grainger[c(1)]
+Roane.occ=Roane[c(1)]
+Blount.occ=Blount[c(1)]
+Sevier.occ=Sevier[c(1)]
+head(Sevier.occ)
+```
+
+
+
+
+
+```{r}
+#These are now two species occurrence lists, one for The Bronx, one for Manhattan
+#To turn them into species lists with abundance data, you can recycle the code from above.
+bronx.ab=count(bronx.occ)
+head(bronx.ab)
+manhattan.ab=count(manhattan.occ)
+head(manhattan.ab)
+westchester.ab=count(westchester.occ)
+head(westchester.ab)
+Queens.ab=count(Queens.occ)
+Kings.ab=count(Kings.occ)
+Richmond.ab=count(Richmond.occ)
+Knox.ab=count(Knox.occ)
+Grainger.ab=count(Grainger.occ)
+Sevier.ab=count(Sevier.occ)
+Roane.ab=count(Roane.occ)
+Blount.ab=count(Blount.occ)
+```
+
+
+
+```{r}
+#Then re-name the columns as previously. Here just the Bronx
+bronx.ab=data.frame("bronx", bronx.ab)
+head(bronx.ab)
+names(bronx.ab)<-c("ListID", "SpeciesID", "Freq")
+head(bronx.ab)
+manhattan.ab=data.frame("manhattan", manhattan.ab)
+names(manhattan.ab)<-c("ListID", "SpeciesID", "Freq")
+head(manhattan.ab)
+westchester.ab=data.frame("westchester", westchester.ab)
+names(westchester.ab)<-c("ListID", "SpeciesID", "Freq")
+head(westchester.ab)
+Queens.ab=data.frame("Queens", Queens.ab)
+names(Queens.ab)<-c("ListID", "SpeciesID", "Freq")
+Kings.ab=data.frame("Kings", Kings.ab)
+names(Kings.ab)<-c("ListID", "SpeciesID", "Freq")
+Richmond.ab=data.frame("Richmond", Richmond.ab)
+names(Richmond.ab)<-c("ListID", "SpeciesID", "Freq")
+Knox.ab=data.frame("Knox", Knox.ab)
+names(Knox.ab)<-c("ListID", "SpeciesID", "Freq")
+Sevier.ab=data.frame("Sevier", Sevier.ab)
+names(Sevier.ab)<-c("ListID", "SpeciesID", "Freq")
+Roane.ab=data.frame("Roane", Roane.ab)
+names(Roane.ab)<-c("ListID", "SpeciesID", "Freq")
+Grainger.ab=data.frame("Grainger", Grainger.ab)
+names(Grainger.ab)<-c("ListID", "SpeciesID", "Freq")
+Blount.ab=data.frame("Blount", Blount.ab)
+names(Blount.ab)<-c("ListID", "SpeciesID", "Freq")
+head(Blount.ab)
+```
+
+
+```{r}
+allcounty.ab=rbind(bronx.ab, manhattan.ab, Blount.ab, Knox.ab, Queens.ab, Kings.ab, Richmond.ab, Knox.ab, Sevier.ab, Roane.ab, Grainger.ab, Blount.ab)
+head(allcounty.ab)
+tail(allcounty.ab)
+dim(allcounty.ab)
+#This powerful function matrify is going to convert this list of species with their site-specific abundances into a matrix with the species as the column headings, the rows as the samples. This gives a long sample list
+counties.ab<-matrify(allcounty.ab)
+head(counties.ab)
+#If we look at the dimensions of this matrix, what does it mean? What is 2? What is 9?
+dim(counties.ab)
+```
+
+```{r}
+simpson<-diversity(counties.ab, index = "simpson")
+shannon<-diversity(counties.ab, index = "shannon")
+simpson
+shannon
+bray = vegdist(counties.ab, "bray")
+bray
+jaccard = vegdist(counties.ab, "jaccard", binary=T)
+jaccard
+```
+
+
+
+
+```{r}
+#Now that there are four samples, it makes sense to start seeing if this is enough samples to gauge diversity across these samples. Vegan can compute the cumulative number of species across all four, and then plot them. It will take the plots in random order. Other options for this method argument include "collector" which is the order in which they are entered into the matrix. Another is "rarefaction" which will adjust to take into account that each sample may have a different number of individuals.
+accurve<-specaccum(counties.ab, method="random", permutations=100)
+plot(accurve$sites, accurve$richness,
+     xlab="Number of Sites",
+     ylab="Species Richness",
+     main="Now with all county samples")
+accurve2<-specaccum(counties.ab, method="collector", permutations=100)
+plot(accurve2$sites, accurve$richness,
+     xlab="Number of Sites",
+     ylab="Species Richness",
+     main="Rarefaction, with county samples")
+```
+
+
+
+
+```{r}
+head(counties.ab)
+example_NMDS=metaMDS(counties.ab, distance="bray", k=2) # Our community-by-species matrix 
+# K=2 is setting the number of reduced dimensions. Increase if high stress is problem. 
+#"The stress, or the disagreement between 2-D configuration and predicted values from the regression"
+
+#A good rule of thumb: stress > 0.05 provides an excellent representation in reduced dimensions, > 0.1 is great, >0.2 is good/ok, and stress > 0.3 provides a poor representation
+
+plot(example_NMDS)
+test.plot<-ordiplot(example_NMDS,type="n") #Ordination plot function especially for congested plots
+points(test.plot, "species", pch=21, col="red", bg="yellow")
+```
+
+```{r}
+test.plot<-ordiplot(example_NMDS,type="n") #Ordination plot function especially for congested plots
+points(test.plot, "sites", col="blue", cex=0.9)
+
+test.plot<-ordiplot(example_NMDS,type="n") #Ordination plot function especially for congested plots
+points(test.plot, "species", pch=21, col="red", bg="yellow")
+text(test.plot, "sites", col="blue", cex=0.9)
+
+test.plot<-ordiplot(example_NMDS,type="n") #Ordination plot function especially for congested plots
+text(test.plot, "species", pch=21, col="red", bg="yellow")
+points(test.plot, "sites", col="blue", cex=0.9)
+
+
+```
