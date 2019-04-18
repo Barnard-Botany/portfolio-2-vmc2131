@@ -52,11 +52,26 @@ Now let's do that for another sample:
 three=c("A","A","A","A","A","A","B","B","B","B","B","B","B","C","C","C","C","C","C","C","D","E","F","G","Q")
 three.ab=count(three)
 three.ab
+#adding class and length
+class(three.ab)
+length(three.ab)
 #We might also want to get a list of species, and the length of that list (which is species richness). 
 three.u=unique(three)
 three.u
+#adding length and attributes
 length(three.u)
+attributes(three.ab)
 ```
+
+```{R} 
+#I am adding a List ID Column to three.ab so that the number of columns coincide with that of one.ab
+#three.ab=data.frame("three", three.ab)
+#three.ab
+#I am also renaming the columns. 
+#names(three.ab)<-c("ListID", "SpeciesID", "Freq")
+#three.ab
+```
+
 
 
 ```{R}
@@ -66,7 +81,7 @@ three.ab=data.frame("three", three.ab)
 three.ab
 names(three.ab)<-c("ListID", "SpeciesID", "Freq")
 #And then combine the two variables into one
-ab=rbind(one.ab, three.ab)
+ab=rbind(one.ab,three.ab)
 ab
 dim(ab)
 #A powerful function in LABDSV converts this list of sample IDs, species and site-specific abundances into a matrix in which species names are column headings, and row names are samples. To do this, it creates a master list of all species in all samples. A matrix like this is useful for quantifying multiple aspects of biodiversity -- alpha and beta and gamma. 
@@ -115,7 +130,8 @@ Q         0     0/23 = 0          0        0
 You can try doing a similar calculation for Sample "three" and then compare to the values obtained from R using the VEGAN package
 
 ```{r}
-#library(vegan)
+#install.packages(vegan)
+library(vegan)
 abundance
 shannon<-diversity(abundance, index = "shannon")
 shannon
@@ -338,7 +354,7 @@ In other words, two or more samples with a similar species composition and speci
 ## Switching to real species data: County occurrence data from BIEN
 
 ```{r}
-#library("bien")
+library("BIEN")
 #As you know, you can obtain species occurrence data from the BIEN database, or from another even more comprehensive data base called gbif (gbif.org). Occurrence data is a type of abundance data, and it can also be used to figure out presence-absence data. 
 bronx <- BIEN_occurrence_county(country="United States", state="New York", county = "Bronx")
 head(bronx)
@@ -406,8 +422,55 @@ jaccard
 
 ```
 
+```{R}
+#library(BIEN)
+#We previously learned to "slim down" data sets to one or a few variables, which we can do here
+bronx.occ=bronx[c(1)]
+head(bronx.occ)
+manhattan.occ=manhattan[c(1)]
+head(manhattan.occ)
+#These are now two species occurrence lists, one for The Bronx, one for Manhattan
+#To turn them into species lists with abundance data, you can recycle the code from above.
+bronx.ab=count(bronx.occ)
+head(bronx.ab)
+manhattan.ab=count(manhattan.occ)
+head(manhattan.ab)
+#Then re-name the columns as previously. Here just the Bronx
+bronx.ab=data.frame("bronx", bronx.ab)
+head(bronx.ab)
+names(bronx.ab)<-c("ListID", "SpeciesID", "Freq")
+head(bronx.ab)
+manhattan.ab=data.frame("manhattan", manhattan.ab)
+head(manhattan.ab)
+names(manhattan.ab)<-c("ListID", "SpeciesID", "Freq")
+head(manhattan.ab)
+twocounty.ab=rbind(bronx.ab, manhattan.ab)
+head(twocounty.ab)
+tail(twocounty.ab)
+dim(twocounty.ab)
+#This powerful function matrify is going to convert this list of species with their site-specific abundances into a matrix with the species as the column headings, the rows as the samples. This gives a long sample list
+urbantwo.ab<-matrify(twocounty.ab)
+urbantwo.ab
+#If we look at the dimensions of this matrix, what does it mean? What is 2? What is 9?
+dim(urbantwo.ab)
+simpson<-diversity(urbantwo.ab, index = "simpson")
+shannon<-diversity(urbantwo.ab, index = "shannon")
+simpson
+shannon
+bray = vegdist(urbantwo.ab, "bray")
+bray
+jaccard = vegdist(urbantwo.ab, "jaccard", binary=T)
+jaccard
+
+
+```
+
 ```{r}
 write.csv(threecounty.ab, file = "threecounty.csv")
+```
+
+```{R}
+write.csv(twocounty.ab, file = "twocounty.csv")
 ```
 
 What if you wanted to save the abundance matrix as well?
@@ -444,6 +507,7 @@ head(MH_list)
 ```{r}
 #Now I'm going to give them headings, just as we did earlier
 names(MH_list)<-c("ListID", "SpeciesID", "Freq")
+head(MH_list)
 ```
 
 ```{r}
@@ -457,6 +521,7 @@ LES_list=count(speciesID)
 head(LES_list)
 LES_list=data.frame("LES", LES_list)
 names(LES_list)<-c("ListID", "SpeciesID", "Freq")
+head(LES_list)
 ```
 
 ```{r}
@@ -480,21 +545,103 @@ bray = vegdist(wab, "bray")
 bray
 ```
 
-## How to finish this portfolio
+### How to finish this portfolio
 
 The last step in finishing this portfolio is to prepare two types of lists. 
-a. lists of three counties
+a. lists of three counties (I will be doing the South Florida counties: Miami-Dade, Monroe, and Broward)
 b. some other type of list - ideally get three lists of the same type that are interesting to you (look back to Portfolio 2.1 on Courseworks)
 
+LIST 1:
+## Pulling BIEN occurence data by county:
+```{R}
+library(BIEN)
+dade <- BIEN_occurrence_county(country = "United States", state = "Florida", county = "Miami-Dade")
+head(dade)
+tail(dade)
+monroe <- BIEN_occurrence_county(country = "United States", state = "Florida", county = "Monroe")
+head(monroe)
+tail(monroe)
+attributes(monroe)
+broward <- BIEN_occurrence_county(country = "United States", state = "Florida", county = "Broward")
+head(broward)
+tail(broward)
+attributes(broward)
+```
 
-Process your county lists until they are transformed into a species abundance matrix. 
+## Transformation of county lists into a species abundance matrix:
+```{r}
+library(BIEN)
+dade.occ=dade[c(1)]
+head(dade.occ)
+monroe.occ=monroe[c(1)]
+head(monroe.occ)
+broward.occ=broward[c(1)]
+head(broward.occ)
+#Three species occurrence lists: Miami-Dade County, Monroe County, Broward County.
+#Sspecies lists with abundance data:
+dade.ab=count(dade.occ)
+head(dade.ab)
+monroe.ab=count(monroe.occ)
+head(monroe.ab)
+broward.ab=count(broward.occ)
+head(broward.ab)
+#Re-naming the columns.
+dade.ab=data.frame("dade", dade.ab)
+head(dade.ab)
+names(dade.ab)<-c("ListID", "SpeciesID", "Freq")
+head(dade.ab)
+monroe.ab=data.frame("monroe", monroe.ab)
+head(monroe.ab)
+names(monroe.ab)<-c("ListID", "SpeciesID", "Freq")
+head(monroe.ab)
+broward.ab=data.frame("broward", broward.ab)
+head(broward.ab)
+names(broward.ab)<-c("ListID", "SpeciesID", "Freq")
+head(broward.ab)
+threecounty.ab=rbind(dade.ab, monroe.ab, broward.ab)
+head(threecounty.ab)
+tail(threecounty.ab)
+dim(threecounty.ab)
+#This powerful function matrify is going to convert this list of species with their site-specific abundances into a matrix with the species as the column headings, the rows as the samples. This gives a long sample list
+urban.ab<-matrify(threecounty.ab)
+urban.ab
+#If we look at the dimensions of this matrix, what does it mean? What is 2? What is 9?
+dim(urban.ab)
+```
 
-Then compute some diversity indices. 
+## Computing diversity indices:
+```{r}
+#Simpson's index
+#The Simpson's index is based on the likelihood(D) that any two randomly encountered individuals between two data sets are the same species. It gives more weight to species evenness and common species. D is a measure of dominance, so as D increases, diversity (in the sense of evenness) decreases. It is important to note that the index reports 1-D and the higher the index, the lower the D and the and the higher biodiversity.
+simpson<-diversity(urban.ab, index = "simpson")
+simpson
+```
+ ^ A higher value of the Simpson's index means that there is higher diversity. Thus, as we can see from the index generated by the code above, Dade has a Simpson's index of 0.9983387, which in comparison to the values of the other counties (Monroe=0.9911452 and Broward 0.9610105), has the highest diversity of the three counties. To put it into simpler terms, there is a lower likelihood(D) (in comparison to Broward and Monroe, with Monroe lying too far ahead) that any two individuals encountered in this county are of the same species. This means that when reported as 1-D in the Simpon's index, there is high value and it means there is a lower dominance of one species in this county, and a higher overall diversity.
+ 
+```{r}
+#Shannon Index
+#The Shannon-Weaver Diversity index (H) examines each species for the proportion of individuals that it contributes to the total individuals of all species in the sample. The Shannon-Weaver index shows species richness and abundance, while Simpson's index gives more weight to species evenness and common species.
+shannon<-diversity(urban.ab, index = "shannon")
+shannon
+```
+ ^ As the value of the Shannon-Weaver diversity index (H) increases, so does the diversity. Thus, based on the data generated above, we see that Dade county has the higher H value of the three counties and thus Dade county exhibits the most diversity.
+```{r}
+#Bray-Curtis Coefficient
+# We use this index to measure the similarity of any two pairs of lists in a matrix. The Bray-Curtis index will give us a ratio, using abundance data, that calculates the differences in abundance between samples as an absolute value and then sums their absolute differences and places it over the sum of the total individuals in the pair of samples.
+bray = vegdist(urban.ab, "bray")
+bray
+```
+"These coefficients will vary between 0 to 1. A coefficient of 0 will yield that there is no absolute concrete relationship between the two data sets. A coefficient of 1 means that the two sets of data indicate a complete matching. In the case of these three counties, we see that Monroe and Dade county abundance data have a Bray-Curtis coefficient of 0.7458213. Between Broward and Dade county, the Bray-Curtis coefficient is 0.9034417. This means that, in comparison, Dade county abundance data has more similarities to that of Broward county than it has with that of Monroe county. Given that the geographical terrains are different between Monroe an Dade (Monroe county includes the Keys, the smaller connected islands to South Florida, and Dade county does not), we expect to see a larger difference between Dade and Monroe county abundance data than we do for Dade and Broward Data. However, it is interesting to note that Monroe county has more abundance data similarities to that of Broward than it does with Dade county (monroe-broward= 0.873 vs monroe-dade=0.745) EVEN THOUGH Dade county is directly between Broward and Monroe, and is closer to Monroe county than is Broward. 
+```{r}
+#Jaccard
+#Jaccardʼs index uses only presence-absence data. It computes the fraction of species shared between the samples and does not entail any information on abundance.
+jaccard = vegdist(urban.ab, "jaccard", binary=T)
+jaccard
+```
+ ^ We see from the Jaccard data generated above that Dade and Broward counties have the highest Jaccard value of 0.9358736 (Monroe-Dade= 0.7902961, Monroe-Broward= 0.8911917). Interpreting these values allows us to analyze the distinctions of diversity within these counties. Dade and Broward share the highest fraction of species between their data, but does not account for any abundance information. Monroe and Dade county has the lowest Jaccard value and thus, in comparison, they share the lowest fraction of the same species, again not including abuncance analytics.
 
-Before finalizing and turning in our notebook, add  commentary. 
 
-How do you interpret the indices computed for the County data?
-
+LIST 2:
 
 Now process the other three lists in the same fashion.
 
